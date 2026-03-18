@@ -1,0 +1,1076 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SOQL Studio — AI-Powered Salesforce Query Generator</title>
+
+<!-- SEO -->
+<meta name="description" content="Generate accurate SOQL and SOSL queries for any Salesforce app using AI. Supports Sales Cloud, Service Cloud, Health Cloud, Financial Services Cloud and more.">
+<meta name="keywords" content="SOQL, SOSL, Salesforce, query generator, AI, Sales Cloud, Service Cloud, Apex, LWC">
+<meta name="author" content="SOQL Studio">
+<meta name="robots" content="index, follow">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="SOQL Studio — AI-Powered Salesforce Query Generator">
+<meta property="og:description" content="Generate accurate SOQL & SOSL queries for any Salesforce Cloud using AI. Supports Apex, LWC wire adapters, aggregates, subqueries and more.">
+<meta property="og:image" content="https://raw.githubusercontent.com/salesforce/design-system-react/master/assets/images/salesforce-logo.png">
+<meta property="og:url" content="">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SOQL Studio — AI Salesforce Query Generator">
+<meta name="twitter:description" content="Generate SOQL & SOSL queries for Sales Cloud, Service Cloud, Health Cloud and more — powered by AI.">
+
+<!-- Favicon (Salesforce cloud emoji as SVG favicon) -->
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230176d3'/><text y='72' x='50' text-anchor='middle' font-size='60'>⚡</text></svg>">
+
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:        #f0f4f9;
+    --bg2:       #e4eaf3;
+    --surface:   #ffffff;
+    --surface2:  #f7f9fc;
+    --border:    #d6dde8;
+    --border2:   #c2ccd9;
+    --sf-blue:   #0176d3;
+    --sf-blue2:  #014486;
+    --sf-cloud:  #1b96ff;
+    --sf-teal:   #06a59a;
+    --sf-violet: #7526e3;
+    --sf-orange: #fe9339;
+    --sf-green:  #2e844a;
+    --sf-red:    #ba0517;
+    --text:      #181e2e;
+    --text2:     #4a5568;
+    --text3:     #8898aa;
+    --shadow:    0 1px 3px rgba(0,0,0,0.08), 0 4px 16px rgba(1,118,211,0.08);
+    --shadow-lg: 0 8px 32px rgba(1,118,211,0.14), 0 2px 8px rgba(0,0,0,0.08);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Layered background */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 320px;
+    background: linear-gradient(135deg, #012b5e 0%, #0176d3 55%, #1b96ff 100%);
+    z-index: 0;
+  }
+  body::after {
+    content: '';
+    position: fixed;
+    top: 180px; left: 0; right: 0;
+    height: 160px;
+    background: linear-gradient(to bottom, transparent, var(--bg));
+    z-index: 0;
+  }
+
+  /* Floating orbs */
+  .orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(60px);
+    opacity: 0.18;
+    pointer-events: none;
+    z-index: 0;
+  }
+  .orb1 { width: 320px; height: 320px; top: -80px; right: 10%; background: #1b96ff; }
+  .orb2 { width: 200px; height: 200px; top: 60px; left: 5%;  background: #06a59a; }
+
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 0 20px 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 40px 0 36px;
+    animation: slideDown 0.5s ease both;
+  }
+  .header-inner {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .sf-logo {
+    width: 52px; height: 52px;
+    background: white;
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    flex-shrink: 0;
+  }
+  .sf-logo svg { width: 32px; height: 32px; }
+  .header-text {}
+  .header-title {
+    font-size: 26px;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.5px;
+    line-height: 1;
+  }
+  .header-sub {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 0.5px;
+  }
+  .header-pills {
+    margin-left: auto;
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+  .hpill {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 20px;
+    border: 1px solid rgba(255,255,255,0.25);
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.85);
+    letter-spacing: 0.5px;
+  }
+
+  /* ── MAIN CARD ── */
+  .main-card {
+    background: var(--surface);
+    border-radius: 20px;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+    animation: riseUp 0.55s 0.1s ease both;
+  }
+
+  /* App selector tabs */
+  .app-tabs {
+    display: flex;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--border);
+    background: var(--surface2);
+    padding: 0 24px;
+    gap: 0;
+    scrollbar-width: none;
+  }
+  .app-tabs::-webkit-scrollbar { display: none; }
+  .app-tab {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    padding: 14px 16px 12px;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text3);
+    cursor: pointer;
+    border-bottom: 2.5px solid transparent;
+    white-space: nowrap;
+    transition: all 0.18s;
+    user-select: none;
+  }
+  .app-tab:hover { color: var(--sf-blue); }
+  .app-tab.active {
+    color: var(--sf-blue);
+    border-bottom-color: var(--sf-blue);
+    background: transparent;
+  }
+  .tab-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+
+  /* Body */
+  .card-body { padding: 28px 28px 24px; }
+
+  /* Prompt area */
+  .prompt-label {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 10px;
+  }
+  .label-text {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .kbd {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid var(--border2);
+    background: var(--bg2);
+    color: var(--text3);
+    margin-left: auto;
+  }
+
+  .textarea-wrap {
+    position: relative;
+    border-radius: 12px;
+    border: 1.5px solid var(--border);
+    background: var(--surface2);
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .textarea-wrap:focus-within {
+    border-color: var(--sf-blue);
+    box-shadow: 0 0 0 3px rgba(1,118,211,0.12);
+  }
+  textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    outline: none;
+    padding: 16px 18px 46px;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 14.5px;
+    font-weight: 400;
+    color: var(--text);
+    resize: none;
+    min-height: 110px;
+    line-height: 1.65;
+  }
+  textarea::placeholder { color: var(--text3); }
+
+  .textarea-footer {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    display: flex; align-items: center;
+    padding: 8px 14px;
+    border-top: 1px solid var(--border);
+    gap: 8px;
+  }
+  .app-context {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--sf-blue);
+    font-weight: 500;
+  }
+  .char-count-sm {
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text3);
+  }
+
+  /* Object chips */
+  .objects-row {
+    margin-top: 14px;
+    display: flex; flex-wrap: wrap; gap: 7px; align-items: center;
+  }
+  .obj-hint {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .obj-chip {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11.5px;
+    padding: 4px 11px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+    font-weight: 500;
+  }
+  .obj-chip:hover {
+    border-color: var(--sf-blue);
+    color: var(--sf-blue);
+    background: rgba(1,118,211,0.05);
+  }
+
+  /* Controls row */
+  .controls-row {
+    display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; align-items: center;
+  }
+  .select-group { display: flex; flex-direction: column; gap: 4px; min-width: 150px; flex: 1; }
+  .select-lbl {
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .sel-wrap { position: relative; }
+  .sel-wrap::after {
+    content: '▾';
+    position: absolute;
+    right: 10px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: var(--text3);
+    pointer-events: none;
+  }
+  select {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 28px 8px 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--text);
+    outline: none;
+    appearance: none;
+    cursor: pointer;
+    transition: border-color 0.18s;
+  }
+  select:focus { border-color: var(--sf-blue); box-shadow: 0 0 0 3px rgba(1,118,211,0.1); }
+
+  .gen-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: linear-gradient(135deg, #0176d3, #014486);
+    color: #fff;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13.5px;
+    font-weight: 700;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 26px;
+    cursor: pointer;
+    box-shadow: 0 2px 12px rgba(1,118,211,0.35);
+    transition: all 0.2s;
+    white-space: nowrap;
+    align-self: flex-end;
+    letter-spacing: 0.2px;
+  }
+  .gen-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(1,118,211,0.45); }
+  .gen-btn:active { transform: none; }
+  .gen-btn:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(255,255,255,0.35);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: none;
+  }
+  .loading .spinner { display: block; }
+  .loading .btn-label { display: none; }
+  .btn-arrow { display: inline; }
+  .loading .btn-arrow { display: none; }
+
+  /* ── OUTPUT ── */
+  .output-wrap {
+    border-top: 1px solid var(--border);
+    margin-top: 20px;
+    padding-top: 22px;
+    display: none;
+  }
+  .output-wrap.visible { display: block; }
+
+  .output-topbar {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; flex-wrap: wrap;
+  }
+  .status-chip {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 11.5px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .status-ok  { background: #ebf7f0; color: var(--sf-green); border: 1px solid #b3ddc9; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .obj-badge {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(1,118,211,0.08);
+    color: var(--sf-blue);
+    border: 1px solid rgba(1,118,211,0.2);
+  }
+  .app-badge {
+    font-size: 11px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(7,165,154,0.08);
+    color: var(--sf-teal);
+    border: 1px solid rgba(7,165,154,0.2);
+  }
+  .action-btns { margin-left: auto; display: flex; gap: 8px; }
+  .action-btn {
+    display: flex; align-items: center; gap: 5px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px; font-weight: 500;
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .action-btn:hover { border-color: var(--border2); color: var(--text); }
+  .action-btn.copied { color: var(--sf-green); border-color: #b3ddc9; background: #ebf7f0; }
+
+  /* Code block */
+  .code-block {
+    background: #0d1117;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #2a2f3a;
+  }
+  .code-topbar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 10px 16px;
+    background: #161b22;
+    border-bottom: 1px solid #2a2f3a;
+  }
+  .code-dot { width: 10px; height: 10px; border-radius: 50%; }
+  .cd-r { background: #ff5f56; } .cd-y { background: #ffbd2e; } .cd-g { background: #27c93f; }
+  .code-filename {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: #6b7688;
+    margin-left: 4px;
+  }
+  .code-lang {
+    margin-left: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: #3fb950;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  pre {
+    padding: 22px 22px;
+    overflow-x: auto;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 13.5px;
+    line-height: 1.8;
+    color: #c9d1d9;
+  }
+  pre::-webkit-scrollbar { height: 5px; }
+  pre::-webkit-scrollbar-track { background: transparent; }
+  pre::-webkit-scrollbar-thumb { background: #2a2f3a; border-radius: 3px; }
+
+  /* SOQL syntax highlight */
+  .sk  { color: #ff7b72; font-weight: 500; }  /* keywords */
+  .sf  { color: #d2a8ff; }                     /* functions */
+  .ss  { color: #a5d6ff; }                     /* strings */
+  .sn  { color: #79c0ff; }                     /* numbers/dates */
+  .sc  { color: #8b949e; font-style: italic; } /* comments */
+  .so  { color: #ffa657; }                     /* objects/types */
+  .sop { color: #e3b341; }                     /* operators */
+  .sf2 { color: #7ee787; }                     /* field names */
+
+  /* Info panels */
+  .info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 14px;
+  }
+  @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+
+  .info-panel {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .info-panel.full { grid-column: 1 / -1; }
+  .info-panel-title {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 8px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .info-panel-body {
+    font-size: 13px;
+    line-height: 1.65;
+    color: var(--text2);
+  }
+  .field-list {
+    display: flex; flex-wrap: wrap; gap: 5px;
+  }
+  .field-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 2px 8px;
+    border-radius: 5px;
+    background: rgba(1,118,211,0.07);
+    color: var(--sf-blue);
+    border: 1px solid rgba(1,118,211,0.15);
+  }
+
+  /* Warning */
+  .warn-panel {
+    display: flex; gap: 10px; align-items: flex-start;
+    background: #fffaed;
+    border: 1px solid #f5c842;
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-top: 12px;
+    font-size: 12.5px;
+    color: #7a5c00;
+  }
+  .warn-icon { font-size: 16px; flex-shrink: 0; }
+
+  /* Error */
+  .error-banner {
+    display: none;
+    background: #fff0f0;
+    border: 1px solid #ffb3b3;
+    border-radius: 10px;
+    padding: 14px 18px;
+    color: var(--sf-red);
+    font-size: 13px;
+    margin-top: 16px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .error-banner.visible { display: flex; gap: 10px; align-items: flex-start; }
+
+  /* History */
+  .history-section {
+    margin-top: 28px;
+    display: none;
+    animation: riseUp 0.4s ease both;
+  }
+  .history-section.visible { display: block; }
+  .history-header {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+  }
+  .history-title {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text3);
+  }
+  .history-count {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--bg2);
+    color: var(--text3);
+  }
+  .clear-btn {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--text3);
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace;
+    transition: color 0.15s;
+  }
+  .clear-btn:hover { color: var(--sf-red); }
+
+  .history-cards { display: flex; flex-direction: column; gap: 7px; }
+  .hist-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hist-card:hover { border-color: var(--sf-blue); box-shadow: 0 2px 10px rgba(1,118,211,0.1); }
+  .hist-icon {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .hist-body { flex: 1; min-width: 0; }
+  .hist-prompt {
+    font-size: 12.5px;
+    color: var(--text);
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .hist-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10.5px;
+    color: var(--text3);
+    margin-top: 2px;
+  }
+  .hist-arrow { color: var(--text3); font-size: 14px; }
+
+  /* Animations */
+  @keyframes slideDown { from { opacity:0; transform:translateY(-10px); } to { opacity:1; transform:none; } }
+  @keyframes riseUp   { from { opacity:0; transform:translateY(14px);  } to { opacity:1; transform:none; } }
+  @keyframes spin     { to { transform:rotate(360deg); } }
+  @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+</style>
+</head>
+<body>
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="page-wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-inner">
+      <div class="sf-logo">
+        <!-- Salesforce cloud icon -->
+        <svg viewBox="0 0 100 70" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M41.5 14.5C44.8 11.1 49.3 9 54.3 9C63.2 9 70.5 15.8 71.6 24.4C73.3 23.6 75.3 23.2 77.3 23.2C84.8 23.2 90.9 29.3 90.9 36.8C90.9 44.3 84.8 50.4 77.3 50.4H23.2C16.7 50.4 11.4 45.1 11.4 38.6C11.4 32.7 15.7 27.9 21.4 27C21.3 26.3 21.2 25.6 21.2 24.9C21.2 18.7 26.2 13.7 32.4 13.7C35.7 13.7 38.7 15.1 40.8 17.3" fill="#0176d3"/>
+        </svg>
+      </div>
+      <div class="header-text">
+        <div class="header-title">SOQL Studio</div>
+        <div class="header-sub">AI-Powered Salesforce Query Generator</div>
+      </div>
+      <div class="header-pills">
+        <span class="hpill">SOQL</span>
+        <span class="hpill">SOSL</span>
+        <span class="hpill">Apex-Ready</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CARD -->
+  <div class="main-card">
+
+    <!-- App tabs -->
+    <div class="app-tabs" id="appTabs">
+      <div class="app-tab active" data-app="Sales Cloud" data-color="#0176d3" onclick="selectApp(this)">
+        <span class="tab-dot" style="background:#0176d3"></span>Sales Cloud
+      </div>
+      <div class="app-tab" data-app="Service Cloud" data-color="#06a59a" onclick="selectApp(this)">
+        <span class="tab-dot" style="background:#06a59a"></span>Service Cloud
+      </div>
+      <div class="app-tab" data-app="Marketing Cloud" data-color="#fe9339" onclick="selectApp(this)">
+        <span class="tab-dot" style="background:#fe9339"></span>Marketing Cloud
+      </div>
+      <div class="app-tab" data-app="Experience Cloud" data-color="#7526e3" onclick="selectApp(this)">
+        <span class="tab-dot" style="background:#7526e3"></span>Experience Cloud
+      </div>
+      <div class="app-tab" data-app="Health Cloud" data-color="#ba0517" onclick="selectApp(this)">
+        <span class="tab-dot" style="background:#ba0517"></span>Health Cloud
+      </div>
+      <div class="app-tab" data-app="Financial Services Cloud" data-color="#2e844a" onclick="selectApp(this)">
+        <span class="tab-dot" style="background:#2e844a"></span>Financial Services
+      </div>
+      <div class="app-tab" data-app="Custom / Generic Salesforce" data-color="#8898aa" onclick="selectApp(this)">
+        <span class="tab-dot" style="background:#8898aa"></span>Custom Org
+      </div>
+    </div>
+
+    <div class="card-body">
+
+      <!-- Prompt -->
+      <div class="prompt-label">
+        <span class="label-text">Describe your query</span>
+        <span class="kbd">⌘ Enter to run</span>
+      </div>
+
+      <div class="textarea-wrap">
+        <textarea
+          id="promptInput"
+          maxlength="600"
+          rows="3"
+          placeholder="e.g. Get all open Opportunities over $50,000 created this year, ordered by close date, with Account name..."
+          spellcheck="false"
+        ></textarea>
+        <div class="textarea-footer">
+          <span class="app-context" id="appContext">// Sales Cloud</span>
+          <span class="char-count-sm" id="charCount">0 / 600</span>
+        </div>
+      </div>
+
+      <!-- Object quick-picks (dynamic by app) -->
+      <div class="objects-row" id="objectsRow">
+        <span class="obj-hint">Objects:</span>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls-row">
+        <div class="select-group">
+          <span class="select-lbl">Query Type</span>
+          <div class="sel-wrap">
+            <select id="queryType">
+              <option value="SOQL SELECT">SOQL — SELECT</option>
+              <option value="SOQL Aggregate">SOQL — Aggregate</option>
+              <option value="SOQL with Subquery">SOQL — Subquery / Semi-Join</option>
+              <option value="SOQL Parent-Child">SOQL — Parent-Child Relationship</option>
+              <option value="SOSL FIND">SOSL — FIND</option>
+            </select>
+          </div>
+        </div>
+        <div class="select-group">
+          <span class="select-lbl">Output Style</span>
+          <div class="sel-wrap">
+            <select id="outputStyle">
+              <option value="plain SOQL">Plain SOQL</option>
+              <option value="Apex inline String">Apex inline String</option>
+              <option value="Apex Database.query()">Apex Database.query()</option>
+              <option value="LWC wire adapter">LWC wire adapter (@wire)</option>
+              <option value="Tooling API">Tooling API format</option>
+            </select>
+          </div>
+        </div>
+        <div class="select-group">
+          <span class="select-lbl">Limit rows</span>
+          <div class="sel-wrap">
+            <select id="limitRows">
+              <option value="no LIMIT clause">No LIMIT</option>
+              <option value="LIMIT 10">LIMIT 10</option>
+              <option value="LIMIT 50" selected>LIMIT 50</option>
+              <option value="LIMIT 200">LIMIT 200</option>
+              <option value="LIMIT 2000">LIMIT 2000</option>
+            </select>
+          </div>
+        </div>
+        <button class="gen-btn" id="genBtn" onclick="generateSOQL()">
+          <div class="spinner"></div>
+          <span class="btn-label">Generate SOQL</span>
+          <span class="btn-arrow"> ⚡</span>
+        </button>
+      </div>
+
+      <!-- Error -->
+      <div class="error-banner" id="errorBanner">
+        <span>⚠</span>
+        <span id="errorMsg"></span>
+      </div>
+
+      <!-- Output -->
+      <div class="output-wrap" id="outputWrap">
+        <div class="output-topbar">
+          <div class="status-chip status-ok"><span class="status-dot"></span>Generated</div>
+          <span class="obj-badge" id="objBadge">Account</span>
+          <span class="app-badge" id="appBadge">Sales Cloud</span>
+          <div class="action-btns">
+            <button class="action-btn" id="copyBtn" onclick="copySOQL()">⎘ Copy</button>
+            <button class="action-btn" onclick="downloadSOQL()">↓ .soql</button>
+          </div>
+        </div>
+
+        <div class="code-block">
+          <div class="code-topbar">
+            <div class="code-dot cd-r"></div>
+            <div class="code-dot cd-y"></div>
+            <div class="code-dot cd-g"></div>
+            <span class="code-filename" id="codeFilename">query.soql</span>
+            <span class="code-lang">SOQL</span>
+          </div>
+          <pre id="soqlOutput"></pre>
+        </div>
+
+        <div class="info-grid" id="infoGrid"></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- History -->
+  <div class="history-section" id="histSection">
+    <div class="history-header">
+      <span class="history-title">Recent Queries</span>
+      <span class="history-count" id="histCount">0</span>
+      <button class="clear-btn" onclick="clearHistory()">Clear all</button>
+    </div>
+    <div class="history-cards" id="historyCards"></div>
+  </div>
+
+</div>
+
+<script>
+// ── App object suggestions ──
+const APP_OBJECTS = {
+  'Sales Cloud':               ['Account','Contact','Opportunity','Lead','Campaign','OpportunityLineItem','Quote','Contract','Order','Pricebook2'],
+  'Service Cloud':             ['Case','ServiceContract','Entitlement','LiveChatTranscript','KnowledgeArticleVersion','WorkOrder','Asset','Contact','Account'],
+  'Marketing Cloud':           ['Campaign','CampaignMember','Lead','Contact','Account','EmailMessage','Task','Event'],
+  'Experience Cloud':          ['User','Contact','Account','CollaborationGroup','FeedItem','Community','NetworkMember','ContentDocument'],
+  'Health Cloud':              ['Account','Contact','Case','HealthCloudGA__EhrCondition__c','HealthCloudGA__CarePlanTemplate__c','HealthCloudGA__CareObservation__c','Task'],
+  'Financial Services Cloud':  ['FinServ__FinancialAccount__c','FinServ__FinancialHolding__c','Account','Contact','Opportunity','FinServ__Revenue__c','Lead'],
+  'Custom / Generic Salesforce':['Account','Contact','Opportunity','Lead','Case','User','Task','Event','ContentDocument','CustomObject__c'],
+};
+
+const APP_ICONS = {
+  'Sales Cloud':'💼','Service Cloud':'🎧','Marketing Cloud':'📣','Experience Cloud':'🌐',
+  'Health Cloud':'🏥','Financial Services Cloud':'💰','Custom / Generic Salesforce':'⚙️'
+};
+
+let selectedApp = 'Sales Cloud';
+let lastSOQL = '';
+let history = [];
+
+function selectApp(el) {
+  document.querySelectorAll('.app-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  selectedApp = el.dataset.app;
+  document.getElementById('appContext').textContent = `// ${selectedApp}`;
+  renderObjectChips();
+}
+
+function renderObjectChips() {
+  const row = document.getElementById('objectsRow');
+  const objs = APP_OBJECTS[selectedApp] || [];
+  row.innerHTML = '<span class="obj-hint">Objects:</span>' +
+    objs.slice(0,8).map(o => `<span class="obj-chip" onclick="insertObject('${o}')">${o}</span>`).join('');
+}
+
+function insertObject(name) {
+  const ta = document.getElementById('promptInput');
+  if (!ta.value.includes(name)) {
+    ta.value = ta.value ? ta.value + ` on ${name}` : `Query ${name}`;
+  }
+  ta.focus();
+  updateCharCount();
+}
+
+function updateCharCount() {
+  const v = document.getElementById('promptInput').value;
+  document.getElementById('charCount').textContent = `${v.length} / 600`;
+}
+
+document.getElementById('promptInput').addEventListener('input', updateCharCount);
+document.getElementById('promptInput').addEventListener('keydown', e => {
+  if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') generateSOQL();
+});
+
+function setLoading(on) {
+  const btn = document.getElementById('genBtn');
+  btn.disabled = on;
+  btn.classList.toggle('loading', on);
+}
+
+function showError(msg) {
+  const b = document.getElementById('errorBanner');
+  document.getElementById('errorMsg').textContent = msg;
+  b.classList.add('visible');
+  document.getElementById('outputWrap').classList.remove('visible');
+}
+function hideError() {
+  document.getElementById('errorBanner').classList.remove('visible');
+}
+
+// ── SOQL syntax highlighting ──
+function highlightSOQL(code) {
+  const keywords = /\b(SELECT|FROM|WHERE|AND|OR|NOT|IN|NOT IN|INCLUDES|EXCLUDES|LIKE|NULL|TRUE|FALSE|ORDER BY|GROUP BY|HAVING|LIMIT|OFFSET|FOR VIEW|FOR REFERENCE|FOR UPDATE|WITH|SECURITY_ENFORCED|DATA CATEGORY|FIND|IN ALL FIELDS|IN NAME FIELDS|IN EMAIL FIELDS|RETURNING|USING SCOPE|ASC|DESC|NULLS FIRST|NULLS LAST|UPDATE TRACKING|UPDATE VIEWSTAT|TYPEOF|WHEN|THEN|ELSE|END)\b/gi;
+  const funcs    = /\b(COUNT|COUNT_DISTINCT|SUM|AVG|MIN|MAX|CALENDAR_MONTH|CALENDAR_QUARTER|CALENDAR_YEAR|DAY_IN_MONTH|DAY_IN_WEEK|DAY_IN_YEAR|DAY_ONLY|FISCAL_MONTH|FISCAL_QUARTER|FISCAL_YEAR|HOUR_IN_DAY|WEEK_IN_MONTH|WEEK_IN_YEAR|FORMAT|CONVERT_CURRENCY|DISTANCE|GEOLOCATION|toLabel|convertCurrency|INCLUDES|EXCLUDES)\b/gi;
+  const dateVars = /\b(TODAY|YESTERDAY|TOMORROW|LAST_WEEK|THIS_WEEK|NEXT_WEEK|LAST_MONTH|THIS_MONTH|NEXT_MONTH|LAST_90_DAYS|NEXT_90_DAYS|THIS_QUARTER|LAST_QUARTER|NEXT_QUARTER|THIS_YEAR|LAST_YEAR|NEXT_YEAR|THIS_FISCAL_QUARTER|LAST_FISCAL_QUARTER|NEXT_FISCAL_QUARTER|THIS_FISCAL_YEAR|LAST_FISCAL_YEAR|NEXT_FISCAL_YEAR|LAST_N_DAYS:\d+|NEXT_N_DAYS:\d+)\b/g;
+
+  let e = code.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  e = e.replace(/(\/\/[^\n]*)/g, '<span class="sc">$1</span>');
+  e = e.replace(/('(?:[^'\\]|\\.)*')/g, '<span class="ss">$1</span>');
+  e = e.replace(dateVars, '<span class="sn">$&</span>');
+  e = e.replace(/\b(\d{4}-\d{2}-\d{2}(?:T[\d:Z.+-]*)?)\b/g, '<span class="sn">$1</span>');
+  e = e.replace(/\b(\d+(?:\.\d+)?)\b/g, '<span class="sn">$1</span>');
+  e = e.replace(keywords, '<span class="sk">$1</span>');
+  e = e.replace(funcs, '<span class="sf">$1</span>');
+  return e;
+}
+
+async function generateSOQL() {
+  const prompt = document.getElementById('promptInput').value.trim();
+  if (!prompt) { document.getElementById('promptInput').focus(); return; }
+
+  const qtype   = document.getElementById('queryType').value;
+  const style   = document.getElementById('outputStyle').value;
+  const lim     = document.getElementById('limitRows').value;
+
+  hideError();
+  setLoading(true);
+
+  const systemPrompt = `You are a Salesforce SOQL/SOSL expert. Generate accurate, production-ready Salesforce queries.
+
+Context:
+- Salesforce App: ${selectedApp}
+- Query type requested: ${qtype}
+- Output style: ${style}
+- Row limit preference: ${lim}
+
+Rules:
+1. Return ONLY a valid JSON object with these fields:
+   - "soql": the complete query string (use \\n for line breaks, proper indentation with spaces)
+   - "primaryObject": the main SObject name (e.g. "Opportunity")
+   - "fields": array of field API names used in the SELECT clause
+   - "explanation": 1-2 sentence plain-English description of what this query does
+   - "notes": any important caveats, FLS considerations, governor limits, or performance tips (can be empty string)
+   - "hasWarning": boolean — true if the query might hit governor limits or requires special permissions
+
+2. For ${selectedApp}, use correct standard or managed package field/object API names.
+3. For Financial Services Cloud, prefix managed fields with FinServ__.
+4. For Health Cloud, use HealthCloudGA__ prefix where applicable.
+5. Apply ${lim} unless the user's prompt specifies otherwise.
+6. Format the SOQL query neatly with one clause per line.
+7. If ${style} is "Apex inline String", wrap in: String query = '...'; List<SObject> records = Database.query(query);
+8. If ${style} is "LWC wire adapter", provide a proper @wire with proper import.
+9. Do NOT include markdown backticks or any text outside the JSON.
+
+Important: always use realistic, correct Salesforce API field names (e.g. CloseDate, StageName, Amount, AccountId, etc.).`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: prompt }]
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error?.message || 'API error');
+
+    const raw = data.content.map(b => b.text || '').join('');
+    let parsed;
+    try {
+      parsed = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    } catch { throw new Error('Could not parse the AI response. Please try again.'); }
+
+    if (!parsed.soql) throw new Error('No SOQL was returned. Please rephrase your prompt.');
+
+    lastSOQL = parsed.soql;
+
+    // Update badges
+    document.getElementById('objBadge').textContent  = parsed.primaryObject || 'SObject';
+    document.getElementById('appBadge').textContent  = selectedApp;
+    document.getElementById('codeFilename').textContent = `${(parsed.primaryObject||'query').toLowerCase()}.soql`;
+
+    // Render code
+    document.getElementById('soqlOutput').innerHTML = highlightSOQL(parsed.soql);
+
+    // Info panels
+    const grid = document.getElementById('infoGrid');
+    let html = '';
+
+    // Fields panel
+    if (parsed.fields && parsed.fields.length) {
+      html += `<div class="info-panel">
+        <div class="info-panel-title">// Fields Queried (${parsed.fields.length})</div>
+        <div class="field-list">${parsed.fields.map(f=>`<span class="field-tag">${f}</span>`).join('')}</div>
+      </div>`;
+    }
+
+    // Explanation
+    if (parsed.explanation) {
+      html += `<div class="info-panel">
+        <div class="info-panel-title">// What this does</div>
+        <div class="info-panel-body">${parsed.explanation}</div>
+      </div>`;
+    }
+
+    // Notes
+    if (parsed.notes) {
+      html += `<div class="info-panel full">
+        <div class="info-panel-title">// Dev Notes</div>
+        <div class="info-panel-body">${parsed.notes}</div>
+      </div>`;
+    }
+
+    // Governor limit warning
+    if (parsed.hasWarning) {
+      html += `<div class="info-panel full" style="border-color:#f5c842;background:#fffaed;">
+        <div class="info-panel-title" style="color:#7a5c00;">⚠ Governor Limit Advisory</div>
+        <div class="info-panel-body" style="color:#7a5c00;">This query may return large datasets. Consider adding WHERE filters, LIMIT clauses, or batching with Batch Apex if used in automation.</div>
+      </div>`;
+    }
+
+    grid.innerHTML = html;
+    document.getElementById('outputWrap').classList.add('visible');
+
+    // Save to history
+    history.unshift({ prompt, soql: parsed.soql, app: selectedApp, obj: parsed.primaryObject || 'SObject', time: new Date() });
+    if (history.length > 8) history.pop();
+    renderHistory();
+
+  } catch (err) {
+    showError(err.message || 'An unexpected error occurred.');
+  } finally {
+    setLoading(false);
+  }
+}
+
+function copySOQL() {
+  if (!lastSOQL) return;
+  navigator.clipboard.writeText(lastSOQL).then(() => {
+    const btn = document.getElementById('copyBtn');
+    btn.classList.add('copied');
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => { btn.classList.remove('copied'); btn.textContent = '⎘ Copy'; }, 2000);
+  });
+}
+
+function downloadSOQL() {
+  if (!lastSOQL) return;
+  const blob = new Blob([lastSOQL], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'query.soql';
+  a.click();
+}
+
+function renderHistory() {
+  if (!history.length) return;
+  const sec   = document.getElementById('histSection');
+  const cards = document.getElementById('historyCards');
+  sec.classList.add('visible');
+  document.getElementById('histCount').textContent = history.length;
+  cards.innerHTML = history.map((h,i) => `
+    <div class="hist-card" onclick="loadHistory(${i})">
+      <div class="hist-icon" style="background:rgba(1,118,211,0.08)">${APP_ICONS[h.app]||'⚙️'}</div>
+      <div class="hist-body">
+        <div class="hist-prompt">${h.prompt}</div>
+        <div class="hist-meta">${h.app} · ${h.obj} · ${h.time.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</div>
+      </div>
+      <span class="hist-arrow">›</span>
+    </div>
+  `).join('');
+}
+
+function loadHistory(i) {
+  const h = history[i];
+  document.getElementById('promptInput').value = h.prompt;
+  updateCharCount();
+  lastSOQL = h.soql;
+  document.getElementById('objBadge').textContent  = h.obj;
+  document.getElementById('appBadge').textContent  = h.app;
+  document.getElementById('soqlOutput').innerHTML  = highlightSOQL(h.soql);
+  document.getElementById('outputWrap').classList.add('visible');
+  document.getElementById('infoGrid').innerHTML = '';
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearHistory() {
+  history = [];
+  document.getElementById('histSection').classList.remove('visible');
+}
+
+// Init
+renderObjectChips();
+</script>
+</body>
+</html>
